@@ -36,7 +36,7 @@ def hms(secs):
     
 # suck in data
 print "Reading data"
-rundata = recfromcsv('allruns.csv')
+rundata = numpy.recfromcsv('allruns.csv')
 distances = numpy.loadtxt('watchdistances.dat')
 maxdistance = max(rundata['distance'])
 distances = distances[distances <= maxdistance]
@@ -49,29 +49,30 @@ widgets = ['Analysing: ',
            ' ', progressbar.Bar("="), ' ', progressbar.ETA()]
 pbar = progressbar.ProgressBar(widgets=widgets, maxval=max(runset)).start()
 
-for track in sorted(runset):
+besthistory = numpy.zeros([len(runset), len(distances)])
+for tracki, track in enumerate(sorted(runset)):
     trackdata = rundata[rundata['track']==track]
     trackbests = findbesttime(trackdata['seconds'], trackdata['distance'],
                               targets=distances)
-#    writebests('bestoverdistance_%04i.dat'%track, distances, trackbests)
     bests = numpy.minimum(trackbests, bests)
+    besthistory[tracki, :] = bests
+    writebests('bests/upto_%04i.dat'%track, distances, bests)
+    writebests('bests/track_%04i.dat'%track, distances, trackbests)
     pbar.update(track)
+besth = file('besthistory.dat', 'w')
+numpy.savetxt('besthistory.dat', besthistory.T)
 writebests('bestoverdistance.dat', distances, bests)
 pbar.finish()
 
-# Figure out a factor for distances
-
-# FIXME: this weights the shorter distances more because there are
-# more points
+# Figure out how we are doing compared to world records
 records = numpy.loadtxt('records.dat')
 # interpolate the watchdistances in the records file
 watchrecords = numpy.interp(distances, records[:,0], records[:,1])
 # geometric mean better for fractions
-f = scipy.stats.gmean(watchrecords/bests)
-# f = float(numpy.linalg.lstsq(numpy.matrix(bests).T,
-#                              numpy.matrix(watchrecords).T)[0])
-
-print "We are doing %2.1f%% of world records" % (f*100)
+fworldrecords = scipy.stats.gmean(watchrecords/bests)
+flasttobest = 1/scipy.stats.gmean(filter(numpy.isfinite, trackbests/bests))
+print "We are doing %2.1f%% of world records" % (fworldrecords*100)
+print "Last run was %2.1f%% of best" % (flasttobest*100)
 
 # show where we did well
 newbests = numpy.arange(len(bests))[bests == trackbests]
@@ -80,7 +81,7 @@ if len(newbests) > 0:
     for track in newbests:
         h, m, s = hms(bests[track])
         ph, pm, ps = hms(bests[track]/distances[track]*1000.0)
-        print "%track\t%ih%02i:%02i\t%2i:%02i min/km" % (distances[track], h, m, s, pm, ps)
+        print "%2.1fm\t%ih%02i:%02i\t%2i:%02i min/km" % (distances[track], h, m, s, pm, ps)
 
 # Add results for last run
 distances = list(distances)
