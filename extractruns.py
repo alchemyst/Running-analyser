@@ -5,6 +5,7 @@ import string, os
 import numpy
 import csv
 import sys
+import time
 
 # On the mac this is linked to
 # ~/Library/Application Support/Garmin/Training Center/Training Center.gtc
@@ -12,6 +13,10 @@ if len(sys.argv) > 1:
     database = sys.argv[1]
 else:
     database = "Training Center.gtc"
+
+# The Training center uses an epoch of 1 January 2001
+# FIXME: this doesn't handle the time zone info correctly -- this should be in UTC
+garminepoch = time.mktime((2001, 1, 1, 0, 0, 0, 0, 0, 0))
 
 trackquery = """select zTrack,zdisplayedname from zCDTreeItem where zImageName = 'history_running' order by zStartTime2 asc"""
 pointquery = """select zTime, zHeartRate, zCumulativeDistance, zCadence
@@ -51,12 +56,15 @@ allruns.writerow(["track"] + writenames)
 rnumber = 0
 tracknames = set()
 
+badtracks = set()
+
 for (track,name,) in cur:
     if track is None:
         print "problem with %s (no track number)" % (name)
         continue
     elif name in tracknames:
         print "skipping %s (already processed)" % (name)
+        badtracks.add(track)
         continue
     else:
         print "processing %s (track %i)" % (name, track)
@@ -73,9 +81,6 @@ for (track,name,) in cur:
             print " - strangely long distance (%3.1f km) detected, skipping." % numpy.max(raw['distance']/1000)
             continue
         
-        # note starting date and distance in log
-        print >> runhistory, raw['time'][0], numpy.max(raw['distance'])
-        
         # interpolate data to once a second
         seconds = numpy.arange(raw['time'][0], raw['time'][-1])
         interp = lambda v: noneinterp(seconds, raw['time'], v)
@@ -87,10 +92,15 @@ for (track,name,) in cur:
         if numpy.any(speed>40):
             print " - fast speed (max=%2.1f) detected, skipping." % numpy.max(speed)
             continue
-#         if numpy.any(numpy.isfinite(speed)):
-#             print " - non-finite speed. skipping."
-#             continue
+        if not numpy.all(numpy.isfinite(speed)):
+            print " - non-finite speed. skipping."
+            continue
 
+        # note starting date and distance in log
+        starttime = time.gmtime((raw['time'][0] + garminepoch))
+        datestr = time.strftime("%Y-%m-%d", starttime)
+        print >> runhistory, datestr, numpy.max(raw['distance'])
+        
         for i in range(len(seconds)-1):
             row = [rnumber, seconds[i], interped['heartrate'][i], interped['distance'][i], speed[i], smoothspeed[i], interped['cadence'][i]]
             allruns.writerow(row)
@@ -102,3 +112,5 @@ for (track,name,) in cur:
         print >> histogram
 
 #    print
+
+print badtracks
