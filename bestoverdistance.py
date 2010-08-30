@@ -5,14 +5,6 @@ import scipy.stats
 import csv
 import progressbar
 
-def recfromcsv(filename):
-    """Returns a record array from a CSV."""
-    # TODO: unnecessary in new numpy > 1.3.1
-    c = csv.reader(file(filename))
-    headers = c.next()
-    data = [map(float, row) for row in c]
-    return numpy.rec.fromrecords(data, names=headers)
-
 def findbesttime(t, d, targets):
     bests = numpy.inf*targets
     for i in range(len(t)-1):
