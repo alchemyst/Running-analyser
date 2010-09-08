@@ -1,0 +1,12 @@
+*.pyc
+*~
+*.eps
+*.pdf
+*.db
+*.sql
+*.gtc
+*.dat
+*.csv
+.ropeproject
+.pydevproject
+*.png
