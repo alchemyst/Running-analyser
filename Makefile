@@ -2,7 +2,7 @@ outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf pcolor.png
 input=Training\ Center.gtc
 #input=ruanne.gtc
 
-all: ${outputs}
+all: $(outputs)
 
 %.pdf: %.eps
 	epstopdf $<
@@ -16,7 +16,7 @@ bestoverdistance.eps: bestoverdistance.dat lastrun.dat bestoverdistance.gp
 histogram.eps: allruns.csv histogram.gp
 	./histogram.gp
 
-monthly.eps weekly.eps: history.sqlite history.gp
+monthly.eps weekly.eps: $(input) history.gp
 	./history.gp
 
 bestoverdistance.dat lastrun.dat: allruns.csv bestoverdistance.py watchdistances.dat records.dat
@@ -26,7 +26,7 @@ allruns.csv: $(input)
 	./extractruns.py "$<"
 
 clean:
-	-rm ${outputs} *.eps
+	-rm $(outputs) *.eps
 
 realclean: clean
 	-rm allruns.csv bestoverdistance.dat lastrun.dat
