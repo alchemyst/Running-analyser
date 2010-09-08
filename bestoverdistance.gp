@@ -35,7 +35,7 @@ set y2range [8:30]
 set style data lines
 #set key center top
 
-recordfactor=.526
+recordfactor=0.531
 bestfile = 'bestoverdistance.dat'
 lastfile = 'lastrun.dat'
 records = 'records.dat'
