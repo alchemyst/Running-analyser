@@ -22,23 +22,29 @@ cur = conn.cursor()
 #
 # The zCDTreeItem table is used to store pretty much all the clickable
 # stuff in the left hand window as well as lap info
-# the entries with z_ent=40 have associated laps with z_ent=34 and link on zbelongstorun
-# The different meanings of z_ent are:
+# the entries with z_ent=41 have associated laps with z_ent=35 and link on zbelongstorun
+#
+# To get these numbers, do
+# select distinct z_ent, zimagename from zcdtreeitem;
 # z_ent   zimagename
-# 30	folder_workout
-# 30	folder_courses
-# 30	folder_history
-# 33	folder_myactivities
-# 34	lap
-# 34	nul
-# 36	course
-# 37	multisport
-# 39	workout_running
-# 39	workout_biking
-# 39	workout_other
-# 40	history_biking
-# 40	history_running
-# 40	history_other
+#30    folder_courses
+#30    folder_history
+#30    folder_workout
+#31    folder_history
+#34    folder_myactivities
+#35    {null}
+#35    lap
+#37    course
+#38    multisport
+#40    workout_biking
+#40    workout_other
+#40    workout_running
+#41    history_biking
+#41    history_other
+#41    history_running
+
+lapcode = 35
+historycode = 41
 
 # TODO: Rework all the del methods to duplicate less code
 # Start with tables = ["Track", "TrackSegment", "TrackPoint"]
@@ -74,7 +80,7 @@ def delhistoryitem(cur, treeitem):
     for (i, ) in cur.fetchall():
         deltrack(cur, i)
     # delete associated lap tree item entries
-    cur.execute('select z_pk,zdisplayedname from zcdtreeitem where z_ent=34 and zbelongstorun=?', (treeitem['z_pk'],))
+    cur.execute('select z_pk,zdisplayedname from zcdtreeitem where z_ent=? and zbelongstorun=?', (lapcode, treeitem['z_pk']))
     for lap in cur.fetchall():
         logging.debug("Deleting lap %s (%i)" % (lap['zdisplayedname'],
                                                 lap['z_pk']))
@@ -88,7 +94,7 @@ def delhistoryitem(cur, treeitem):
 
 # Find items with no track
 logging.info("Deleting history tree items with no associated track... ")
-cur.execute('select z_pk, zdisplayedname, zmultisport from zcdtreeitem where z_ent=40 and ztrack is null')
+cur.execute('select z_pk, zdisplayedname, zmultisport from zcdtreeitem where z_ent=? and ztrack is null', (historycode,))
 counter = 0
 for row in cur.fetchall():
     delhistoryitem(cur, row)
@@ -97,7 +103,7 @@ logging.info("%i items deleted" % (counter,))
 
 # Find duplicate items
 logging.info('Deleting duplicates')
-cur.execute('select distinct b.z_pk as z_pk, b.zDisplayedName as zdisplayedname, b.zmultisport as zmultisport from zcdtreeitem as a join zcdtreeitem as b on a.zdisplayedname=b.zdisplayedname where a.z_ent=40 and b.z_ent=40 and a.z_pk < b.z_pk')
+cur.execute('select distinct b.z_pk as z_pk, b.zDisplayedName as zdisplayedname, b.zmultisport as zmultisport from zcdtreeitem as a join zcdtreeitem as b on a.zdisplayedname=b.zdisplayedname where a.z_ent=:1 and b.z_ent=:1 and a.z_pk < b.z_pk', (historycode,))
 counter = 0
 for row in cur.fetchall():
     delhistoryitem(cur, row)

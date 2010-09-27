@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sqlite3
-import string, os
 import numpy
 import csv
 import sys
@@ -18,10 +17,11 @@ else:
 # FIXME: this doesn't handle the time zone info correctly -- this should be in UTC
 garminepoch = time.mktime((2001, 1, 1, 0, 0, 0, 0, 0, 0))
 
-trackquery = """select zTrack,zdisplayedname from zCDTreeItem where zImageName = 'history_running' order by zStartTime2 asc"""
+# TODO: Don't query on zimagename
+trackquery = """select zTrack,zdisplayedname from zCDTreeItem where zActivity2=3 order by zStartTime3 asc"""
 pointquery = """select zTime, zHeartRate, zCumulativeDistance, zCadence
 from zCDTrackPoint join zCDTRackSegment on zCDTrackPoint.zBelongsToTrackSegment=zCDTrackSegment.z_PK
-where zCDTrackSegment.zBelongsToTrack=%i and zCumulativeDistance is not null and zHeartRate is not null
+where zCDTrackSegment.zBelongsToTrack=? and zCumulativeDistance is not null and zHeartRate is not null
 order by zTime asc"""
 rawnames = ['time', 'heartrate', 'distance', 'cadence']
 interpnames = [r for r in rawnames if r != 'time']
@@ -71,7 +71,7 @@ for (track,name,) in cur:
 
     tracknames.add(name)
     
-    cur2 = con.execute(pointquery % track)
+    cur2 = con.execute(pointquery, (track,))
     t = cur2.fetchall()
     if len(t) > 3:
         raw = numpy.rec.fromrecords(t, names = rawnames)
@@ -102,7 +102,11 @@ for (track,name,) in cur:
         print >> runhistory, datestr, numpy.max(raw['distance'])
         
         for i in range(len(seconds)-1):
-            row = [rnumber, seconds[i], interped['heartrate'][i], interped['distance'][i], speed[i], smoothspeed[i], interped['cadence'][i]]
+            row = [rnumber, seconds[i], 
+                   interped['heartrate'][i], 
+                   interped['distance'][i], 
+                   speed[i], smoothspeed[i], 
+                   interped['cadence'][i]]
             allruns.writerow(row)
 
         # generate speed histogram
