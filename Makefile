@@ -21,7 +21,7 @@ monthly.eps weekly.eps: $(input) history.gp weekly.sql monthly.sql
 
 weekly.sql: timequery.sql.m4
 	m4 -D timefmt="%Y %W" timequery.sql.m4 > $@
-	
+
 monthly.sql: timequery.sql.m4
 	m4 -D timefmt="%Y %m" timequery.sql.m4 > $@
 
