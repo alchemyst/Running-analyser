@@ -3,6 +3,7 @@ input=Training\ Center.gtc
 #input=ruanne.gtc
 
 all: $(outputs)
+	cp $(outputs) ~/Dropbox/training
 
 %.pdf: %.eps
 	epstopdf $<

@@ -7,6 +7,8 @@ set grid
 
 set terminal postscript eps
 set output 'bestoverdistance.eps'
+#set terminal png enhanced
+#set output 'bestoverdistance.png'
 
 # 10 6
 # 12 5
@@ -35,13 +37,16 @@ set y2range [8:30]
 set style data lines
 #set key center top
 
-recordfactor=0.531
+recordfactor=0.631 # 20 minute 5 km - target
 bestfile = 'bestoverdistance.dat'
 lastfile = 'lastrun.dat'
 records = 'records.dat'
 
+kph(speed, distance) = (speed/distance)*3600/1000
+
 #     bestfile using ($1/1000):($2/60/$1*1000) axis x1y2  title 'Pace',\
 
-plot bestfile using ($1/1000):(($1/$2)*3600/1000)  title 'Best Ever',\
-     lastfile using ($1/1000):(($1/$2)*3600/1000)  title 'Last Run',\
-     records using ($1/1000):(recordfactor*$1/$2*3600/1000)  title sprintf('%i%% of world record speeds', recordfactor*100)
+plot bestfile using ($1/1000):(kph($1, $2))  title 'Best Ever',\
+     lastfile using ($1/1000):(kph($1, $2))  title 'Last Run',\
+     records using ($1/1000):(recordfactor*kph($1, $2))  title sprintf('%i%% of world record speeds', recordfactor*100),\
+     records using ($1/1000):(kph($1, $2)) title "Actual world records"

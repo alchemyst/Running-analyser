@@ -21,7 +21,7 @@ garminepoch = time.mktime((2001, 1, 1, 0, 0, 0, 0, 0, 0))
 trackquery = """select zTrack,zdisplayedname from zCDTreeItem where zActivity2=3 order by zStartTime3 asc"""
 pointquery = """select zTime, zHeartRate, zCumulativeDistance, zCadence
 from zCDTrackPoint join zCDTRackSegment on zCDTrackPoint.zBelongsToTrackSegment=zCDTrackSegment.z_PK
-where zCDTrackSegment.zBelongsToTrack=? and zCumulativeDistance is not null and zHeartRate is not null
+where zCDTrackSegment.zBelongsToTrack=? and zCumulativeDistance is not null
 order by zTime asc"""
 rawnames = ['time', 'heartrate', 'distance', 'cadence']
 interpnames = [r for r in rawnames if r != 'time']
