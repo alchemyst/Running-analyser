@@ -30,9 +30,9 @@ set output 'bestoverdistance.eps'
 set y2tics nomirror ("6:00" 10, "5:00" 12, "4:29" 14, "4:00" 15, "3:45" 16, "3:30" 18, "3:00" 20, "2:30" 24, "2:00" 30)
 set logscale x
 
-set xrange [.1:20]
-set yrange [8:30]
-set y2range [8:30]
+set xrange [.1:400]
+set yrange [8:40]
+#set y2range [8:40]
 
 set style data lines
 #set key center top

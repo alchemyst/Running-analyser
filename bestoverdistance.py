@@ -115,10 +115,7 @@ def form(row):
     speed = "%.2f" % ((distance/1000.0)/(lasttime/(60.0*60.0)))
     ps, pm = divparts(lasttime/distance*1000.0, (60,))
     pace = "%2i:%02i" % (pm, ps)
-    if lasttime == besttime:
-        star = "*"
-    else:
-        star = ""
+    star = "*" if lasttime == besttime else ""
     return dstr, time, speed, pace, star
 
 good = ~numpy.isinf(trackbests)

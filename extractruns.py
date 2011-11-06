@@ -44,6 +44,16 @@ def noneinterp(x, xp, fp):
     else:
         return numpy.interp(x, xp, fp)
         
+def splitruns(results):
+    longtime = 10*60*60 # this is considered a long time between points - new run
+    t = results["time"]
+    dt = numpy.diff(t)
+    splits = numpy.array(numpy.nonzero(dt>longtime))
+    splits = numpy.insert(splits, [0, splits.size], [-1, t.size])
+    for startindex, endindex in zip(splits[:-1], splits[1:]):
+        print startindex+1, endindex
+        yield results[startindex+1:endindex]
+        
 con = sqlite3.connect(database)
 cur = con.execute(trackquery)
     
@@ -74,46 +84,48 @@ for (track,name,) in cur:
     cur2 = con.execute(pointquery, (track,))
     t = cur2.fetchall()
     if len(t) > 3:
-        raw = numpy.rec.fromrecords(t, names = rawnames)
-        rnumber += 1
-        
-        if numpy.any(raw['distance']>2e5):
-            print " - strangely long distance (%3.1f km) detected, skipping." % numpy.max(raw['distance']/1000)
-            continue
-        
-        # interpolate data to once a second
-        seconds = numpy.arange(raw['time'][0], raw['time'][-1])
-        interp = lambda v: noneinterp(seconds, raw['time'], v)
-        interped = numpy.rec.fromarrays([interp(raw[m]) for m in interpnames],
-                                        names=interpnames)
-        speed = 3.6 * numpy.diff(interped['distance']);
-        smoothspeed = ewma(0.93, speed)
-
-        if numpy.any(speed>40):
-            print " - fast speed (max=%2.1f) detected, skipping." % numpy.max(speed)
-            continue
-        if not numpy.all(numpy.isfinite(speed)):
-            print " - non-finite speed. skipping."
-            continue
-
-        # note starting date and distance in log
-        starttime = time.gmtime((raw['time'][0] + garminepoch))
-        datestr = time.strftime("%Y-%m-%d", starttime)
-        print >> runhistory, datestr, numpy.max(raw['distance'])
-        
-        for i in range(len(seconds)-1):
-            row = [rnumber, seconds[i], 
-                   interped['heartrate'][i], 
-                   interped['distance'][i], 
-                   speed[i], smoothspeed[i], 
-                   interped['cadence'][i]]
-            allruns.writerow(row)
-
-        # generate speed histogram
-        (counts,edges) = numpy.histogram(smoothspeed, bins=nbins, range=histrange, normed=True)
-        for (c,e) in zip(counts, edges):
-            print >> histogram, rnumber, e, c
-        print >> histogram
+        queryresult = numpy.rec.fromrecords(t, names = rawnames)
+        for raw in splitruns(queryresult):
+            print (raw['time'][-1] - raw['time'][0])/60./60.
+            rnumber += 1
+            raw['distance'] -= raw['distance'][0] # correct distance for runs not starting at 0
+            if numpy.any(raw['distance']>2e5):
+                print " - strangely long distance (%3.1f km) detected, skipping." % numpy.max(raw['distance']/1000)
+                continue
+            
+            # interpolate data to once a second
+            seconds = numpy.arange(raw['time'][0], raw['time'][-1])
+            interp = lambda v: noneinterp(seconds, raw['time'], v)
+            interped = numpy.rec.fromarrays([interp(raw[m]) for m in interpnames],
+                                            names=interpnames)
+            speed = 3.6 * numpy.diff(interped['distance']);
+            smoothspeed = ewma(0.93, speed)
+    
+            if numpy.any(speed>40):
+                print " - fast speed (max=%2.1f) detected, skipping." % numpy.max(speed)
+                continue
+            if not numpy.all(numpy.isfinite(speed)):
+                print " - non-finite speed. skipping."
+                continue
+    
+            # note starting date and distance in log
+            starttime = time.gmtime((raw['time'][0] + garminepoch))
+            datestr = time.strftime("%Y-%m-%d", starttime)
+            print >> runhistory, rnumber, datestr, numpy.max(raw['distance'])
+            
+            for i in range(len(seconds)-1):
+                row = [rnumber, seconds[i], 
+                       interped['heartrate'][i], 
+                       interped['distance'][i], 
+                       speed[i], smoothspeed[i], 
+                       interped['cadence'][i]]
+                allruns.writerow(row)
+    
+            # generate speed histogram
+            (counts,edges) = numpy.histogram(smoothspeed, bins=nbins, range=histrange, normed=True)
+            for (c,e) in zip(counts, edges):
+                print >> histogram, rnumber, e, c
+            print >> histogram
 
 #    print
 
