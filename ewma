@@ -1,0 +1,9 @@
+#!/usr/bin/awk -f
+
+BEGIN { f=0.7; }
+
+NR==1 { v=$2; }
+
+$2>0 { print $1, v=f*v + (1-f)*$2; next}
+
+{print v}

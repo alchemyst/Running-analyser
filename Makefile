@@ -1,4 +1,4 @@
-outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf pcolor.png
+outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf fivek.pdf pcolor.png
 input=Training\ Center.gtc
 #input=ruanne.gtc
 
@@ -7,6 +7,9 @@ all: $(outputs)
 
 %.pdf: %.eps
 	epstopdf $<
+
+fivek.eps: distances.gp
+	./distances.gp
 
 pcolor.png: allruns.csv pcolor.gp
 	./pcolor.gp
@@ -30,6 +33,7 @@ bestoverdistance.dat lastrun.dat: allruns.csv bestoverdistance.py watchdistances
 	./bestoverdistance.py
 
 allruns.csv: $(input)
+	./sanitize.py
 	./extractruns.py "$<"
 
 clean:
