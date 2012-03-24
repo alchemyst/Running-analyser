@@ -1,4 +1,4 @@
-outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf fivek.pdf pcolor.png
+outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf fivek.pdf paceoverdist.pdf pcolor.png
 input=Training\ Center.gtc
 #input=ruanne.gtc
 
@@ -8,7 +8,7 @@ all: $(outputs)
 %.pdf: %.eps
 	epstopdf $<
 
-fivek.eps: distances.gp
+fivek.eps paceoverdist.eps: distances.gp
 	./distances.gp
 
 pcolor.png: allruns.csv pcolor.gp
@@ -20,8 +20,14 @@ bestoverdistance.eps: bestoverdistance.dat lastrun.dat bestoverdistance.gp
 histogram.eps: allruns.csv histogram.gp
 	./histogram.gp
 
-monthly.eps weekly.eps: $(input) history.gp weekly.sql monthly.sql
+monthly.eps weekly.eps: $(input) history.gp weekly.dat monthly.dat
 	./history.gp
+
+monthly.dat: monthly.sql
+	sqlite3 -separator " " Training\ Center.gtc < $< > $@
+
+weekly.dat: weekly.sql
+	sqlite3 -separator " " Training\ Center.gtc < $< | awk '{print $$1, $$2*7+1, $$3}' > $@
 
 weekly.sql: timequery.sql.m4
 	m4 -D timefmt="%Y %W" timequery.sql.m4 > $@

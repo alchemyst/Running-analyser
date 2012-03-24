@@ -19,11 +19,12 @@ garminepoch = time.mktime((2001, 1, 1, 0, 0, 0, 0, 0, 0))
 
 # TODO: Don't query on zimagename
 trackquery = """select zTrack,zdisplayedname from zCDTreeItem where zActivity2=3 order by zStartTime3 asc"""
-pointquery = """select zTime, zHeartRate, zCumulativeDistance, zCadence
+pointquery = """select zTime, ifNull(zHeartRate, 0), zCumulativeDistance, ifNull(zCadence, 0)
 from zCDTrackPoint join zCDTRackSegment on zCDTrackPoint.zBelongsToTrackSegment=zCDTrackSegment.z_PK
 where zCDTrackSegment.zBelongsToTrack=? and zCumulativeDistance is not null
 order by zTime asc"""
 rawnames = ['time', 'heartrate', 'distance', 'cadence']
+rawformats = ['i8', 'i2', 'f8', 'i2']
 interpnames = [r for r in rawnames if r != 'time']
 writenames = ['seconds', 'heartrate', 'distance', 'speed', 'smoothspeed', 'cadence']
 
@@ -39,7 +40,7 @@ def ewma(alpha, x):
     return fx
 
 def noneinterp(x, xp, fp):
-    if any([e==None for e in fp]):
+    if any(e==None for e in fp):
         return numpy.array([0 for i in x])
     else:
         return numpy.interp(x, xp, fp)
@@ -51,7 +52,7 @@ def splitruns(results):
     splits = numpy.array(numpy.nonzero(dt>longtime))
     splits = numpy.insert(splits, [0, splits.size], [-1, t.size])
     for startindex, endindex in zip(splits[:-1], splits[1:]):
-        print startindex+1, endindex
+        #print startindex+1, endindex
         yield results[startindex+1:endindex]
         
 con = sqlite3.connect(database)
@@ -84,9 +85,9 @@ for (track,name,) in cur:
     cur2 = con.execute(pointquery, (track,))
     t = cur2.fetchall()
     if len(t) > 3:
-        queryresult = numpy.rec.fromrecords(t, names = rawnames)
+        queryresult = numpy.rec.fromrecords(t, names = rawnames, formats=rawformats)
         for raw in splitruns(queryresult):
-            print (raw['time'][-1] - raw['time'][0])/60./60.
+            #print (raw['time'][-1] - raw['time'][0])/60./60.
             rnumber += 1
             raw['distance'] -= raw['distance'][0] # correct distance for runs not starting at 0
             if numpy.any(raw['distance']>2e5):
@@ -96,8 +97,12 @@ for (track,name,) in cur:
             # interpolate data to once a second
             seconds = numpy.arange(raw['time'][0], raw['time'][-1])
             interp = lambda v: noneinterp(seconds, raw['time'], v)
-            interped = numpy.rec.fromarrays([interp(raw[m]) for m in interpnames],
-                                            names=interpnames)
+            try:
+                interped = numpy.rec.fromarrays([interp(raw[m]) for m in interpnames],
+                                                names=interpnames)
+            except:
+                for m in interpnames:
+                    print m, raw[m].dtype
             speed = 3.6 * numpy.diff(interped['distance']);
             smoothspeed = ewma(0.93, speed)
     

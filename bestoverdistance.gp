@@ -48,5 +48,6 @@ kph(speed, distance) = (speed/distance)*3600/1000
 
 plot bestfile using ($1/1000):(kph($1, $2))  title 'Best Ever',\
      lastfile using ($1/1000):(kph($1, $2))  title 'Last Run',\
-     records using ($1/1000):(recordfactor*kph($1, $2))  title sprintf('%i%% of world record speeds', recordfactor*100),\
+     records using ($1/1000):(0.631*kph($1, $2))  title '20 minute 5 km',\
+     records using ($1/1000):(0.488*kph($1, $2))  title '2 hour half-marathon',\
      records using ($1/1000):(kph($1, $2)) title "Actual world records"

@@ -9,8 +9,11 @@ monthtarget = weektarget*4
 
 set terminal postscript eps
 set output "monthly.eps"
-plot '<sqlite3 -separator " " Training\ Center.gtc < monthly.sql' using 1:($3/1000) with impulses title "Monthly", monthtarget title "Target"
+plot "monthly.dat" using 1:($3/1000) with impulses title "Monthly", \
+     "" using 1:($3/1000) notitle with points ls 2, \
+     monthtarget title "Target"
 
 set timefmt "%Y %j"
 set output "weekly.eps"
-plot '<sqlite3 -separator " " Training\ Center.gtc < weekly.sql | awk ''{print $1, $2*7+1, $3}''' using 1:($3/1000) with impulses title "Weekly", weektarget title "Target"
+plot "weekly.dat" using 1:($3/1000) with impulses title "Weekly", \
+     weektarget title "Target"
