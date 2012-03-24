@@ -59,49 +59,8 @@ def hms(secs):
     h, m = divmod(m, 60)
     return (h, m, s)
     
-# suck in data
-print "Reading data"
-rundata = numpy.recfromcsv('allruns.csv')
-distances = numpy.loadtxt('watchdistances.dat')
-maxdistance = max(rundata['distance'])
-distances = distances[distances <= maxdistance]
 
-# process
-bests = numpy.inf*distances
-runset = set(rundata["track"])
-widgets = ['Analysing: ', 
-           progressbar.Percentage(), 
-           ' ', progressbar.Bar("="), ' ', progressbar.ETA()]
-pbar = progressbar.ProgressBar(widgets=widgets, maxval=max(runset)).start()
-
-besthistory = numpy.zeros([len(runset), len(distances)])
-for tracki, track in enumerate(sorted(runset)):
-    trackdata = rundata[rundata['track']==track]
-    trackbests = findbesttime(trackdata['seconds'], trackdata['distance'], 
-                              targets=distances)
-    bests = numpy.minimum(trackbests, bests)
-    besthistory[tracki, :] = bests
-    writebests('bests/upto_%04i.dat'%track, distances, bests)
-    writebests('bests/track_%04i.dat'%track, distances, trackbests)
-    pbar.update(track)
-
-numpy.savetxt('besthistory.dat', besthistory.T)
-writebests('bestoverdistance.dat', distances, bests)
-pbar.finish()
-
-# Figure out how we are doing compared to world records
-records = numpy.loadtxt('records.dat')
-# interpolate the watchdistances in the records file
-watchrecords = numpy.interp(distances, records[:, 0], records[:, 1])
-# geometric mean better for fractions
-fworldrecords = scipy.stats.gmean(watchrecords/bests)
-flasttobest = 1/scipy.stats.gmean(filter(numpy.isfinite, trackbests/bests))
-print "We are doing %2.1f%% of world records" % (fworldrecords*100)
-print "Last run was %2.1f%% of best" % (flasttobest*100)
-
-# show how we did:
-
-def form(row):
+def reportform(row):
     distance, lasttime, besttime = row
     if distance<1000:
         dstr = "%i m" % distance
@@ -118,16 +77,67 @@ def form(row):
     star = "*" if lasttime == besttime else ""
     return dstr, time, speed, pace, star
 
-good = ~numpy.isinf(trackbests)
-tabulate.printtable(headers=["Distance", "Time", "Speed", "Pace", ""],
-                    data=zip(distances[good], trackbests[good], bests[good]),
-                    rowformatter=form)
 
-# Add results for last run
-distances = list(distances)
-trackbests = list(trackbests)
-distances.append(trackdata['distance'][-1])
-trackbests.append(trackdata['seconds'][-1] - trackdata['seconds'][0])
-distances, trackbests = zip(*sorted(zip(distances, trackbests)))
+def printbests(distances, times, besttimes=None):
+    if besttimes is None:
+        besttimes = times
+    tabulate.printtable(headers=["Distance", "Time", "Speed", "Pace", ""],
+                        data=zip(distances, times, besttimes),
+                        rowformatter=reportform)
 
-writebests('lastrun.dat', distances, trackbests)
+def main():
+    # suck in data
+    print "Reading data"
+    rundata = numpy.recfromcsv('allruns.csv')
+    distances = numpy.loadtxt('watchdistances.dat')
+    maxdistance = max(rundata['distance'])
+    distances = distances[distances <= maxdistance]
+    
+    # process
+    bests = numpy.inf*distances
+    runset = set(rundata["track"])
+    widgets = ['Analysing: ', 
+               progressbar.Percentage(), 
+               ' ', progressbar.Bar("="), ' ', progressbar.ETA()]
+    pbar = progressbar.ProgressBar(widgets=widgets, maxval=max(runset)).start()
+    
+    besthistory = numpy.zeros([len(runset), len(distances)])
+    for tracki, track in enumerate(sorted(runset)):
+        trackdata = rundata[rundata['track']==track]
+        trackbests = findbesttime(trackdata['seconds'], trackdata['distance'], 
+                                  targets=distances)
+        bests = numpy.minimum(trackbests, bests)
+        besthistory[tracki, :] = bests
+        writebests('bests/upto_%04i.dat'%track, distances, bests)
+        writebests('bests/track_%04i.dat'%track, distances, trackbests)
+        pbar.update(track)
+    
+    numpy.savetxt('besthistory.dat', besthistory.T)
+    writebests('bestoverdistance.dat', distances, bests)
+    pbar.finish()
+    
+    # Figure out how we are doing compared to world records
+    records = numpy.loadtxt('records.dat')
+    # interpolate the watchdistances in the records file
+    watchrecords = numpy.interp(distances, records[:, 0], records[:, 1])
+    # geometric mean better for fractions
+    fworldrecords = scipy.stats.gmean(watchrecords/bests)
+    flasttobest = 1/scipy.stats.gmean(filter(numpy.isfinite, trackbests/bests))
+    print "We are doing %2.1f%% of world records" % (fworldrecords*100)
+    print "Last run was %2.1f%% of best" % (flasttobest*100)
+    
+    # show how we did:
+    good = ~numpy.isinf(trackbests)
+    printbests(distances[good], trackbests[good], bests[good])
+    
+    # Add results for last run
+    distances = list(distances)
+    trackbests = list(trackbests)
+    distances.append(trackdata['distance'][-1])
+    trackbests.append(trackdata['seconds'][-1] - trackdata['seconds'][0])
+    distances, trackbests = zip(*sorted(zip(distances, trackbests)))
+    
+    writebests('lastrun.dat', distances, trackbests)
+
+if __name__ == '__main__':
+    main()
