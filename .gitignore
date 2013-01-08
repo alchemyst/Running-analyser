@@ -11,3 +11,4 @@
 .pydevproject
 *.png
 .project
+*.log
