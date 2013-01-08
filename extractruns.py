@@ -6,6 +6,7 @@ import csv
 import sys
 import time
 
+
 # On the mac this is linked to
 # ~/Library/Application Support/Garmin/Training Center/Training Center.gtc
 if len(sys.argv) > 1:

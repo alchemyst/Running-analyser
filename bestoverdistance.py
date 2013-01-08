@@ -5,6 +5,7 @@ import scipy.stats
 import csv
 import progressbar
 import tabulate
+import os.path
 
 def findbesttime(t, d, targets):
     """Find best times over target distances
@@ -31,6 +32,12 @@ def writebests(filename, distances, bests):
         if numpy.isfinite(b):
             print >> ofile, d, b
     print >> ofile
+
+def readbests(filename, distances):
+    result = numpy.inf*distances
+    filedistances = numpy.fromfile(filename, sep=' ')[1::2]
+    result[:len(filedistances)] = filedistances
+    return result
 
 def divparts(value, parts):
     """ Calculate a split of value into smaller units or parts.
@@ -92,25 +99,28 @@ def main():
     distances = numpy.loadtxt('watchdistances.dat')
     maxdistance = max(rundata['distance'])
     distances = distances[distances <= maxdistance]
-    
     # process
     bests = numpy.inf*distances
     runset = set(rundata["track"])
     widgets = ['Analysing: ', 
                progressbar.Percentage(), 
                ' ', progressbar.Bar("="), ' ', progressbar.ETA()]
-    pbar = progressbar.ProgressBar(widgets=widgets, maxval=max(runset)).start()
+    pbar = progressbar.ProgressBar(widgets=widgets, maxval=len(runset)).start()
     
     besthistory = numpy.zeros([len(runset), len(distances)])
     for tracki, track in enumerate(sorted(runset)):
         trackdata = rundata[rundata['track']==track]
-        trackbests = findbesttime(trackdata['seconds'], trackdata['distance'], 
-                                  targets=distances)
+        trackfile = 'bests/track_%04i.dat' % track
+        if os.path.exists(trackfile):
+            trackbests = readbests(trackfile, distances)
+        else:
+            trackbests = findbesttime(trackdata['seconds'], trackdata['distance'], 
+                                      targets=distances)
         bests = numpy.minimum(trackbests, bests)
         besthistory[tracki, :] = bests
         writebests('bests/upto_%04i.dat'%track, distances, bests)
-        writebests('bests/track_%04i.dat'%track, distances, trackbests)
-        pbar.update(track)
+        writebests(trackfile, distances, trackbests)
+        pbar.update(tracki)
     
     numpy.savetxt('besthistory.dat', besthistory.T)
     writebests('bestoverdistance.dat', distances, bests)

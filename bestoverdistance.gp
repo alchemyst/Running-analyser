@@ -27,10 +27,12 @@ set output 'bestoverdistance.eps'
 # 29 2.06897
 # 30 2
 
-set y2tics nomirror ("6:00" 10, "5:00" 12, "4:29" 14, "4:00" 15, "3:45" 16, "3:30" 18, "3:00" 20, "2:30" 24, "2:00" 30)
-set logscale x
+set y2tics nomirror ("6:00" 10, "5:00" 12, "4:29" 14, "4:00" 15, "3:45" 16, "3:30" 18, "3:00" 20, "2:30" 24, "2:00" 30, "1:40" 36, "1:30" 40)
 
-set xrange [.1:400]
+set log x
+#set log y
+
+set xrange [.1:100]
 set yrange [8:40]
 #set y2range [8:40]
 
@@ -42,12 +44,28 @@ bestfile = 'bestoverdistance.dat'
 lastfile = 'lastrun.dat'
 records = 'records.dat'
 
-kph(speed, distance) = (speed/distance)*3600/1000
+# fit function for records
+a = 8.02651     
+b = 2.70985     
+c = 2.64571e-06 
+d = 42.8487     
+e = 0.0773884   
+f = 0.331192    
+ff(x) = a + b*exp(-c*(x-d)**2) - e*x**f
 
-#     bestfile using ($1/1000):($2/60/$1*1000) axis x1y2  title 'Pace',\
+kph(mps) = (mps)*3600/1000
 
-plot bestfile using ($1/1000):(kph($1, $2))  title 'Best Ever',\
-     lastfile using ($1/1000):(kph($1, $2))  title 'Last Run',\
-     records using ($1/1000):(0.631*kph($1, $2))  title '20 minute 5 km',\
-     records using ($1/1000):(0.488*kph($1, $2))  title '2 hour half-marathon',\
-     records using ($1/1000):(kph($1, $2)) title "Actual world records"
+recordcurve(x) = kph(ff(x*1000))
+
+# fit [0:100000] ff(x) records using 1:($1/$2) via a, b, c, d, e, f
+
+plot bestfile using ($1/1000):(kph($1/$2))  title 'Best Ever',\
+     lastfile using ($1/1000):(kph($1/$2))  title 'Last Run',\
+     records using ($1/1000):(kph($1/$2)) with points title "Actual world records (men)",\
+     "" using ($1/1000):(kph($1/$3)) with points title "Actual world records (women)",\
+     recordcurve(x) notitle,\
+     0.9*recordcurve(x) notitle,\
+     0.631*recordcurve(x) title '20 minute 5 km (0.63 record)',\
+     0.5855*recordcurve(x) title '1:40 half-marathon (0.59 record)'
+
+
