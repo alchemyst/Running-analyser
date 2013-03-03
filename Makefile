@@ -1,4 +1,4 @@
-outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf fivek.pdf paceoverdist.pdf pcolor.png
+outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf fivek.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf
 input=Training\ Center.gtc
 #input=ruanne.gtc
 timefmt="%Y-%m-%d"
@@ -21,10 +21,13 @@ bestoverdistance.eps: bestoverdistance.dat lastrun.dat bestoverdistance.gp
 histogram.eps: allruns.csv histogram.gp
 	./histogram.gp
 
+distancehistogram.eps: distancehistogram.dat distancehistogram.gp
+	./distancehistogram.gp
+
 monthly.eps weekly.eps yearly.eps: $(input) history.gp weekly.dat monthly.dat yearly.dat
 	./history.gp
 
-weekly.dat monthly.dat yearly.dat: $(input)
+weekly.dat monthly.dat yearly.dat distancehistogram.dat: $(input)
 
 %.dat: %.sql
 	sqlite3 -separator " " $(input) < $< > $@
