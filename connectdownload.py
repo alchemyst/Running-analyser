@@ -7,6 +7,9 @@ import mechanize
 import os.path
 import argparse
 import getpass
+import logging
+
+
 
 LOGIN_PAGE = "https://connect.garmin.com/signin"
 STEM = "http://connect.garmin.com/proxy/"
