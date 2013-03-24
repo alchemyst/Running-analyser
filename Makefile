@@ -1,4 +1,4 @@
-outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf fivek.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf
+outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf daily.pdf fivek.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf
 input=Training\ Center.gtc
 #input=ruanne.gtc
 timefmt="%Y-%m-%d"
@@ -24,19 +24,22 @@ histogram.eps: allruns.csv histogram.gp
 distancehistogram.eps: distancehistogram.dat distancehistogram.gp
 	./distancehistogram.gp
 
-monthly.eps weekly.eps yearly.eps: $(input) history.gp weekly.dat monthly.dat yearly.dat
+daily.eps monthly.eps weekly.eps yearly.eps: $(input) history.gp daily.dat weekly.dat monthly.dat yearly.dat
 	./history.gp
 
-weekly.dat monthly.dat yearly.dat distancehistogram.dat: $(input)
+daily.dat weekly.dat monthly.dat yearly.dat distancehistogram.dat: $(input)
 
 %.dat: %.sql
 	sqlite3 -separator " " $(input) < $< > $@
 
+daily.sql: timequery.sql.m4
+	m4 -D groupfmt="%Y-%m-%d" -D timefmt=$(timefmt) $< > $@
+
 weekly.sql: timequery.sql.m4
-	m4 -D groupfmt="%Y %W" -D timefmt=$(timefmt) $< > $@
+	m4 -D groupfmt="%Y-%W" -D timefmt=$(timefmt) $< > $@
 
 monthly.sql: timequery.sql.m4
-	m4 -D groupfmt="%Y %m" -D timefmt=$(timefmt) $< > $@
+	m4 -D groupfmt="%Y-%m" -D timefmt=$(timefmt) $< > $@
 
 yearly.sql: timequery.sql.m4
 	m4 -D groupfmt="%Y" -D timefmt=$(timefmt) $< > $@
