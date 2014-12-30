@@ -19,13 +19,13 @@ plot "daily.dat" using 1:($3/1000) with lines smooth cumulative notitle
 
 set ylabel "Distance / km"
 set output "weekly.eps"
-plot "weekly.dat" using 3:($4/1000) with impulses title "Weekly", \
+plot "weekly.dat" using 2:($3/1000) with impulses title "Weekly", \
      weektarget title "Target"
 
 set output "monthly.eps"
-set timefmt "%Y %m"
-plot "monthly.dat" using 1:($4/1000) with impulses title "Monthly", \
-     "" using 1:($4/1000) notitle with points ls 2, \
+set timefmt "%Y-%m"
+plot "monthly.dat" using 1:($3/1000) with impulses title "Monthly", \
+     "" using 1:($3/1000) notitle with points ls 2, \
      monthtarget title "Target"
 
 set output "yearly.eps"
