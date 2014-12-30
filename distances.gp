@@ -1,7 +1,7 @@
 #!/usr/bin/env gnuplot
 
-data="<./distances.sh 5000"
-smoothed="<./distances.sh 5000 | awk '{print $2, (($5/60)/($4/1000))}' | ./ewma "
+data="<./distances.sh 4000"
+smoothed="<./distances.sh 4000 | awk '{print $2, (($5/60)/($4/1000))}' | ./ewma "
 
 kph(speed, distance) = (speed/distance)*3600/1000
 
@@ -20,7 +20,7 @@ plot data using ($3/1000):(kph($4,$5)) title 'Best 5k',\
      'bestoverdistance.dat' using ($1/1000):(kph($1,$2)) with lines title 'Best over this distance'
 
 #-----------
-set output 'fivek.eps'
+set output 'fourk.eps'
 
 set xlabel 'Date'
 set ylabel 'Pace'

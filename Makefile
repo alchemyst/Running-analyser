@@ -1,4 +1,4 @@
-outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf daily.pdf fivek.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf
+outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf daily.pdf fourk.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf
 input=Training\ Center.gtc
 #input=ruanne.gtc
 timefmt="%Y-%m-%d"
@@ -9,7 +9,7 @@ all: $(outputs)
 %.pdf: %.eps
 	epstopdf $<
 
-fivek.eps paceoverdist.eps: distances.gp bests/track*
+fourk.eps paceoverdist.eps: distances.gp bests/track*
 	./distances.gp
 
 pcolor.png: allruns.csv pcolor.gp
