@@ -19,7 +19,7 @@ else:
 garminepoch = time.mktime((2001, 1, 1, 0, 0, 0, 0, 0, 0))
 
 # TODO: Don't query on zimagename
-trackquery = """select zTrack,zdisplayedname from zCDTreeItem where zActivity2=3 or zActivity2=7 or zActivity2=11 order by zStartTime3 asc"""
+trackquery = """select zTrack,zdisplayedname from zCDTreeItem where zActivity2 in (select known.value from known_runvalues as known where known.type='run') order by zStartTime3 asc"""
 pointquery = """select zTime, ifNull(zHeartRate, 0), zCumulativeDistance, ifNull(zCadence, 0)
 from zCDTrackPoint join zCDTRackSegment on zCDTrackPoint.zBelongsToTrackSegment=zCDTrackSegment.z_PK
 where zCDTrackSegment.zBelongsToTrack=? and zCumulativeDistance is not null
