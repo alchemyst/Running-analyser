@@ -1,4 +1,4 @@
-outputs=bestoverdistance.pdf histogram.pdf monthly.pdf weekly.pdf daily.pdf fourk.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf
+outputs=bestoverdistance.pdf histogram.pdf yearly.pdf monthly.pdf weekly.pdf daily.pdf fourk.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf
 input=Training\ Center.gtc
 #input=ruanne.gtc
 timefmt="%Y-%m-%d"
