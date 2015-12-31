@@ -32,7 +32,8 @@ def printtable(headers, data, formats=None, rowformatter=None):
     for row in outputrows:
         print rowstring(row)
 
-doubleformatter = lambda(x): "%5.3f (double)" % x
+def doubleformatter(x):
+    return "%5.3f (double)" % x
 
 if __name__ == "__main__":
     printtable(headers=['this', 'is', 'a'],
