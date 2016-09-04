@@ -8,7 +8,7 @@ def printtable(headers, data, formats=None, rowformatter=None):
            "formats or rowformatter must be given"
     
     # For now, assume headers
-    collengths = map(len, headers)
+    collengths = list(map(len, headers))
     # for now, assume all rows have same # of cols
     alldata = list(data)
     outputrows = []
@@ -19,18 +19,18 @@ def printtable(headers, data, formats=None, rowformatter=None):
         elif rowformatter:
             transformedrow = rowformatter(row)
         # figure out how long each of the strings are
-        lengths = map(len, transformedrow)
-        collengths = map(max, zip(collengths, lengths))
+        lengths = list(map(len, transformedrow))
+        collengths = list(map(max, list(zip(collengths, lengths))))
         outputrows.append(transformedrow)
     outputformats = ["%%%is" % i for i in collengths]
 
     def rowstring(items):
         return " ".join(f % i for f, i in zip(outputformats, items))
 
-    print rowstring(headers)
-    print '-'*(sum(collengths) + len(collengths))
+    print(rowstring(headers))
+    print('-'*(sum(collengths) + len(collengths)))
     for row in outputrows:
-        print rowstring(row)
+        print(rowstring(row))
 
 def doubleformatter(x):
     return "%5.3f (double)" % x

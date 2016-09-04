@@ -59,9 +59,9 @@ def splitruns(results):
 con = sqlite3.connect(database)
 cur = con.execute(trackquery)
     
-allruns = csv.writer(file('allruns.csv', 'w'))
-histogram = file('histogram.dat', 'w')
-runhistory = file('history.dat', 'w')
+allruns = csv.writer(open('allruns.csv', 'w'))
+histogram = open('histogram.dat', 'w')
+runhistory = open('history.dat', 'w')
 
 allruns.writerow(["track"] + writenames)
 
@@ -72,14 +72,14 @@ badtracks = set()
 
 for (track,name,) in cur:
     if track is None:
-        print "problem with %s (no track number)" % (name)
+        print("problem with %s (no track number)" % (name))
         continue
     elif name in tracknames:
-        print "skipping %s (already processed)" % (name)
+        print("skipping %s (already processed)" % (name))
         badtracks.add(track)
         continue
     else:
-        print "processing %s (track %i)" % (name, track)
+        print("processing %s (track %i)" % (name, track))
 
     tracknames.add(name)
     
@@ -92,7 +92,7 @@ for (track,name,) in cur:
             rnumber += 1
             raw['distance'] -= raw['distance'][0] # correct distance for runs not starting at 0
             if numpy.any(raw['distance']>2e5):
-                print " - strangely long distance (%3.1f km) detected, skipping." % numpy.max(raw['distance']/1000)
+                print(" - strangely long distance (%3.1f km) detected, skipping." % numpy.max(raw['distance']/1000))
                 continue
             
             # interpolate data to once a second
@@ -103,21 +103,21 @@ for (track,name,) in cur:
                                                 names=interpnames)
             except:
                 for m in interpnames:
-                    print m, raw[m].dtype
+                    print(m, raw[m].dtype)
             speed = 3.6 * numpy.diff(interped['distance']);
             smoothspeed = ewma(0.93, speed)
     
             if numpy.any(speed>50):
-                print " - fast speed (max=%2.1f) detected, skipping." % numpy.max(speed)
+                print(" - fast speed (max=%2.1f) detected, skipping." % numpy.max(speed))
                 continue
             if not numpy.all(numpy.isfinite(speed)):
-                print " - non-finite speed. skipping."
+                print(" - non-finite speed. skipping.")
                 continue
     
             # note starting date and distance in log
             starttime = time.gmtime((raw['time'][0] + garminepoch))
             datestr = time.strftime("%Y-%m-%d", starttime)
-            print >> runhistory, rnumber, datestr, numpy.max(raw['distance'])
+            print(rnumber, datestr, numpy.max(raw['distance']), file=runhistory)
             
             for i in range(len(seconds)-1):
                 row = [rnumber, seconds[i], 
@@ -130,9 +130,9 @@ for (track,name,) in cur:
             # generate speed histogram
             (counts,edges) = numpy.histogram(smoothspeed, bins=nbins, range=histrange, normed=True)
             for (c,e) in zip(counts, edges):
-                print >> histogram, rnumber, e, c
-            print >> histogram
+                print(rnumber, e, c, file=histogram)
+            print(file=histogram)
 
 #    print
 
-print badtracks
+print(badtracks)

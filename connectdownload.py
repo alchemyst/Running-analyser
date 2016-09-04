@@ -29,35 +29,35 @@ parser.add_argument('--limit', '-l', type=int, default=10,
 
 def login(br, username, password):
     # Login
-    print "Logging in...",
+    print("Logging in...", end=' ')
     br.open(LOGIN_PAGE)
     br.select_form('login')
     br['login:loginUsernameField'] = username
     br['login:password'] = password
     br.submit()
-    print "Done"
+    print("Done")
 
 
 def findactivities(br, start, limit):
-    print "Getting list of activities...",
+    print("Getting list of activities...", end=' ')
     # Get list of activities
     search = json.loads(br.open(ACTIVITIES_SEARCH % (start, limit)).read())
-    print "Done"
+    print("Done")
     return [item['activity']['activityId'] 
             for item in search['results']['activities']]
 
 
 def download(activityId, br, targetdir):
     filename = os.path.join(targetdir, activityId + '.tcx')
-    print "Downloading", activityId, '...',
+    print("Downloading", activityId, '...', end=' ')
     if os.path.exists(filename):
-        print "File already exists"
+        print("File already exists")
     else:
         try:
             br.retrieve(TCX_EXPORT % activityId, filename)
-            print "OK"
+            print("OK")
         except:
-            print "Not OK"
+            print("Not OK")
 
 if __name__ == "__main__":
     br = mechanize.Browser()

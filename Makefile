@@ -1,4 +1,4 @@
-outputs=bestoverdistance.pdf histogram.pdf yearly.pdf monthly.pdf weekly.pdf daily.pdf fourk.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf
+outputs=bestoverdistance.pdf histogram.pdf yearly.pdf monthly.pdf weekly.pdf daily.pdf fourk.pdf paceoverdist.pdf pcolor.png distancehistogram.pdf ascent.pdf
 input=Training\ Center.gtc
 #input=ruanne.gtc
 timefmt="%Y-%m-%d"
@@ -24,7 +24,7 @@ histogram.eps: allruns.csv histogram.gp
 distancehistogram.eps: distancehistogram.dat distancehistogram.gp
 	./distancehistogram.gp
 
-daily.eps monthly.eps weekly.eps yearly.eps: $(input) history.gp daily.dat weekly.dat monthly.dat yearly.dat
+ascent.eps daily.eps monthly.eps weekly.eps yearly.eps: $(input) history.gp daily.dat weekly.dat monthly.dat yearly.dat
 	./history.gp
 
 daily.dat weekly.dat monthly.dat yearly.dat distancehistogram.dat: $(input)

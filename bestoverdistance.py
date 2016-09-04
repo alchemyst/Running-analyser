@@ -27,11 +27,11 @@ def findbesttime(t, d, targets):
     return bests
 
 def writebests(filename, distances, bests):
-    ofile = file(filename, 'w')
+    ofile = open(filename, 'w')
     for (d, b) in zip(distances, bests):
         if numpy.isfinite(b):
-            print >> ofile, d, b
-    print >> ofile
+            print(d, b, file=ofile)
+    print(file=ofile)
 
 def readbests(filename, distances):
     result = numpy.inf*distances
@@ -89,12 +89,12 @@ def printbests(distances, times, besttimes=None):
     if besttimes is None:
         besttimes = times
     tabulate.printtable(headers=["Distance", "Time", "Speed", "Pace", ""],
-                        data=zip(distances, times, besttimes),
+                        data=list(zip(distances, times, besttimes)),
                         rowformatter=reportform)
 
 def main():
     # suck in data
-    print "Reading data"
+    print("Reading data")
     rundata = numpy.recfromcsv('allruns.csv')
     distances = numpy.loadtxt('watchdistances.dat')
     maxdistance = max(rundata['distance'])
@@ -132,9 +132,9 @@ def main():
     watchrecords = numpy.interp(distances, records[:, 0], records[:, 1])
     # geometric mean better for fractions
     fworldrecords = scipy.stats.gmean(watchrecords/bests)
-    flasttobest = 1/scipy.stats.gmean(filter(numpy.isfinite, trackbests/bests))
-    print "We are doing %2.1f%% of world records" % (fworldrecords*100)
-    print "Last run was %2.1f%% of best" % (flasttobest*100)
+    flasttobest = 1/scipy.stats.gmean(list(filter(numpy.isfinite, trackbests/bests)))
+    print("We are doing %2.1f%% of world records" % (fworldrecords*100))
+    print("Last run was %2.1f%% of best" % (flasttobest*100))
     
     # show how we did:
     good = ~numpy.isinf(trackbests)
@@ -145,7 +145,7 @@ def main():
     trackbests = list(trackbests)
     distances.append(trackdata['distance'][-1])
     trackbests.append(trackdata['seconds'][-1] - trackdata['seconds'][0])
-    distances, trackbests = zip(*sorted(zip(distances, trackbests)))
+    distances, trackbests = list(zip(*sorted(zip(distances, trackbests))))
     
     writebests('lastrun.dat', distances, trackbests)
 
