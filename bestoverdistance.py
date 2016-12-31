@@ -3,7 +3,7 @@
 import numpy
 import scipy.stats
 import csv
-import progressbar
+import tqdm
 import tabulate
 import os.path
 
@@ -102,13 +102,9 @@ def main():
     # process
     bests = numpy.inf*distances
     runset = set(rundata["track"])
-    widgets = ['Analysing: ', 
-               progressbar.Percentage(), 
-               ' ', progressbar.Bar("="), ' ', progressbar.ETA()]
-    pbar = progressbar.ProgressBar(widgets=widgets, maxval=len(runset)).start()
-    
+
     besthistory = numpy.zeros([len(runset), len(distances)])
-    for tracki, track in enumerate(sorted(runset)):
+    for tracki, track in enumerate(tqdm.tqdm(sorted(runset))):
         trackdata = rundata[rundata['track']==track]
         trackfile = 'bests/track_%04i.dat' % track
         if os.path.exists(trackfile):
@@ -120,11 +116,9 @@ def main():
         besthistory[tracki, :] = bests
         writebests('bests/upto_%04i.dat'%track, distances, bests)
         writebests(trackfile, distances, trackbests)
-        pbar.update(tracki)
     
     numpy.savetxt('besthistory.dat', besthistory.T)
     writebests('bestoverdistance.dat', distances, bests)
-    pbar.finish()
     
     # Figure out how we are doing compared to world records
     records = numpy.loadtxt('records.dat')
